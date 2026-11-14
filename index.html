@@ -1,38 +1,60 @@
-<script>
-  const WORKER_URL = "https://asisten-akuntansi.mabyan72.workers.dev";
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asisten Akuntansi</title>
+</head>
+<body style="font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 16px;">
+  <h1>Asisten Akuntansi</h1>
 
-  function ubahKeBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
+  <p>Unggah materi (PDF):</p>
+  <input type="file" id="file" accept="application/pdf">
 
-  document.getElementById("tanya").onclick = async () => {
-    const file = document.getElementById("file").files[0];
-    const pertanyaan = document.getElementById("pertanyaan").value.trim();
-    const hasil = document.getElementById("hasil");
+  <p>Tulis pertanyaan:</p>
+  <textarea id="pertanyaan" rows="3" style="width: 100%;"></textarea>
 
-    if (!file || !pertanyaan) {
-      hasil.textContent = "Pilih PDF dan isi pertanyaan dulu.";
-      return;
-    }
+  <p><button id="tanya">Tanya</button></p>
 
-    hasil.textContent = "Sedang menjawab... (bisa sampai 1 menit untuk PDF besar)";
+  <div id="hasil" style="white-space: pre-wrap;"></div>
 
-    try {
-      const pdfBase64 = await ubahKeBase64(file);
-      const res = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdfBase64, pertanyaan }),
+  <script>
+    const WORKER_URL = "https://asisten-akuntansi.mabyan72.workers.dev";
+
+    function ubahKeBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
-      const data = await res.json();
-      hasil.textContent = data.jawaban || "Tidak ada jawaban.";
-    } catch (err) {
-      hasil.textContent = "Gagal terhubung ke server: " + err.message;
     }
-  };
-</script>
+
+    document.getElementById("tanya").onclick = async () => {
+      const file = document.getElementById("file").files[0];
+      const pertanyaan = document.getElementById("pertanyaan").value.trim();
+      const hasil = document.getElementById("hasil");
+
+      if (!file || !pertanyaan) {
+        hasil.textContent = "Pilih PDF dan isi pertanyaan dulu.";
+        return;
+      }
+
+      hasil.textContent = "Sedang menjawab... (bisa sampai 1 menit untuk PDF besar)";
+
+      try {
+        const pdfBase64 = await ubahKeBase64(file);
+        const res = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfBase64, pertanyaan }),
+        });
+        const data = await res.json();
+        hasil.textContent = data.jawaban || "Tidak ada jawaban.";
+      } catch (err) {
+        hasil.textContent = "Gagal terhubung ke server: " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
